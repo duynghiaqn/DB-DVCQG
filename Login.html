@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>LOGIN - DASHBOARD</title>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        #warning {
+    display: none !important;
+        }
+
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        function validateUser(e) {
+            e.preventDefault();
+            var passcode = $("#passcode").val()
+             console.log("Passcode:", passcode);  // Thêm dòng này để kiểm tra giá trị passcode
+            $("button").attr("disabled", "disabled");
+            google.script.run.withSuccessHandler(function(text) {
+              console.log("Response from validateUser:", text);  // Thêm dòng này để kiểm tra phản hồi từ hàm validateUser
+                M.toast({
+                    html: text
+                });
+                if (text == 'Logging you in!') {
+                    reload();
+                }
+                $("button").removeAttr("disabled");
+            }).validateUser(passcode);
+        }
+
+        function reload() {
+            var linkAddr
+            google.script.run.withSuccessHandler(function(value) {
+                window.open(value, '_top');
+            }).webAppURL(linkAddr);
+        }
+    </script>
+</head>
+<body>
+    <div class="container center">
+        <div class="row">
+            <div class="col s12">
+              <br>
+              <img style="display: block;-webkit-user-select: none;margin: auto;background-color: hsl(0, 0%, 90%);transition: background-color 300ms;" src="https://cdn.dnncloud.net/dvcqg/cchc.png" width="110" height="auto">
+                <h2 class="red-text text-darken-3">HỆ THỐNG GIÁM SÁT DVCTT<br></h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s12 m6 l4 offset-m3 offset-l4">    
+                <h5 class="light">ĐĂNG NHẬP HỆ THỐNG</h5>
+            </div>
+        </div>
+        <form onsubmit="validateUser(event)">
+            <div class="row">
+                <div class="input-field col s12 m6 l4 offset-m3 offset-l4">
+                    <input id="passcode" type="password">
+                    <label for="password">Nhập Passcode</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col s12 m6 l4 offset-m3 offset-l4">
+                    <button class="waves-effect btn light-blue" type="submit">Đăng nhập</button>
+                            <!-- Nút Request và Modal sử dụng Materialize -->
+                    <a class="waves-effect waves-light btn modal-trigger red" href="#requestModal">Nhận Passcode</a>
+                </div>
+            </div>
+        </form>
+
+
+        <div id="requestModal" class="modal">
+            <div class="modal-content">
+                <h4>Nhập Email để nhận Passcode</h4>
+                <div class="input-field">
+                    <input type="email" id="emailInput" class="validate" required>
+                    <label for="emailInput">Email</label>
+                </div>
+                <p id="errorText" class="red-text"></p>
+                <div class="col s2">
+              <img src="https://img.vietqr.io/image/MB-9200100109095-compact.png?amount=1000&addInfo=GET-PASSCODE&accountName=CHAU%20HAI%20DUY%20NGHIA" tittle="SCAN QR PAY" alt="SCAN QR PAY" style="height:150px; width:auto;"> <!-- notice the "circle" class -->
+            </div>
+            </div>
+            <div class="modal-footer">
+                <a href="javascript:void(0)" class="modal-close waves-effect waves-green btn-flat">Đóng</a>
+                <a href="javascript:void(0)" class="waves-effect waves-green btn green" onclick="sendPasscode(event)">Gửi yêu cầu</a>
+            </div>
+        </div>
+</div>
+ <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const requestModal = document.querySelector('#requestModal');
+                const modalInstance = M.Modal.init(requestModal);
+
+                window.showRequestModal = function () {
+                    modalInstance.open();
+                    document.getElementById('emailInput').value = ''; // Clear the input field when modal opens
+                    document.getElementById('errorText').textContent = ''; // Clear the error text
+                };
+
+                window.sendPasscode = function (event) {
+                    event.preventDefault();
+                    const emailInput = document.getElementById('emailInput');
+                    const email = emailInput.value;
+
+                    // Kiểm tra định dạng email sử dụng regex
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(email)) {
+                        M.toast({ html: 'Định dạng email không hợp lệ.', classes: 'red' });
+                        return;
+                    }
+
+                    // Định dạng email hợp lệ, tiến hành gửi passcode
+                    google.script.run.withSuccessHandler(onPasscodeSent).sendPasscode(email);
+                };
+
+                window.onPasscodeSent = function (response) {
+                    if (response.success) {
+                        M.toast({ html: 'Passcode đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến.' });
+                        modalInstance.close();
+                    } else {
+                        M.toast({ html: 'Gửi passcode thất bại. Vui lòng kiểm tra lại email.', classes: 'red' });
+                    }
+                };
+            });
+        </script>
+</body>
+
+</html>
